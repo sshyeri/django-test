@@ -12,24 +12,37 @@ class SettingsTest(TestCase):
         self.assertEqual(settings.LANGUAGE_CODE, 'ko-kr')
         self.assertEqual(settings.TIME_ZONE, 'Asia/Seoul')
         
-#2. Model test
+#2. Model test + ModelForm Test
 class BoardModelTest(TestCase):
     def test_01_model(self):
         # board = Board.objects.create(title='test title', content='test content')
         board = Board.objects.create(title='test title', content='test content', user_id=1)
         self.assertEqual(str(board), f'Board{board.pk}', msg='출력 값이 일치하지 않음')
         # self.assertEqual(str(board), f'Board{board.title}', msg='출력 값이 일치하지 않음')
+    def test_02_boardform(self):
+        # given
+        data = {'title': '제목', 'content': '내용'}
+        # when then
+        self.assertEqual(BoardForm(data).is_valid(), True)
+        
+    def test_03_boardform_without_title(self):
+        data = {'content': '내용'}
+        self. assertEqual(BoardForm(data).is_valid(), False)
+ 
+    def test_04_boardform_without_content(self):
+        data = {'title': '제목'}
+        self. assertEqual(BoardForm(data).is_valid(), False)
         
 #3. View test
 class BoardViewTest(TestCase):
     # create test 에서의 포인트는 form을 제대로 주느냐이다.
     # 가장 기본은 get_check_200
-    def test_01_get_create(self):
+    def SetUp(self):
         # given
         user = self.make_user(username='test', password='qawsedrf!')
         # when
         with self.login(username='test', password='qawsedrf!'):
-            # response = self.get_check_200('boards:create')
+            response = self.get_check_200('boards:create')
             # then
             # self.assertContains(response, '<form')
             self.assertIsInstance(response.context['form'], BoardForm)
@@ -47,10 +60,12 @@ class BoardViewTest(TestCase):
             
     def test_04_board_create_witthout_content(self):
         # given
+        user = self.make_user(username='test', password='qawsedrf!')
         data = {'title': 'test title' }
         # when
         with self.login(username='test', password='qawsedrf!'):
             response = self.post('boards:create', data=data)
-            self.assertContains(response, '폼에 필수 항목입니다.')
+            self.assertContains(response, '')
+            # self.assertContains(response, '폼에 필수 항목입니다.')
             # form.is_valid()를 통과하지 못해서 팅겨저 나옴.
             # assertContains response 해당하는 글자가 있는지 확인하는 메소드
